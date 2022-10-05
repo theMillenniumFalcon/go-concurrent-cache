@@ -26,6 +26,7 @@ func httpGetBody(url string) func() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println(url)
 		defer resp.Body.Close()
 		return ioutil.ReadAll(resp.Body)
 	}

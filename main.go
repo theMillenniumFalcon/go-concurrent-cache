@@ -28,6 +28,7 @@ func (c *Cache) Get(key string, f Func) ([]byte, error) {
 		res = &result{}
 		res.value, res.err = f()
 		c.cache[key] = res
+		c.Unlock()
 	}
 
 	return res.value, res.err
