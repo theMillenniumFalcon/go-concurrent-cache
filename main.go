@@ -3,8 +3,13 @@ package main
 import "sync"
 
 type Cache struct {
-	cache map[string]*result
+	cache map[string]*entry
 	sync.Mutex
+}
+
+type entry struct {
+	res   result
+	ready chan struct{}
 }
 
 type result struct {
@@ -16,20 +21,21 @@ type Func func() ([]byte, error)
 
 func NewCache() *Cache {
 	return &Cache{
-		cache: make(map[string]*result),
+		cache: make(map[string]*entry),
 	}
 }
 
 func (c *Cache) Get(key string, f Func) ([]byte, error) {
 	c.Lock()
-	res, ok := c.cache[key]
-	defer c.Unlock()
-	if !ok {
-		res = &result{}
-		res.value, res.err = f()
-		c.cache[key] = res
+	e := c.cache[key]
+	if e == nil {
+		e = &entry{ready: make(chan struct{})}
+		c.cache[key] = e
 		c.Unlock()
-	}
 
-	return res.value, res.err
+		e.res.value, e.res.err = f()
+		close(e.ready)
+	} else {
+		<-e.ready
+	}
 }
