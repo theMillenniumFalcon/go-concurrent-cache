@@ -22,8 +22,8 @@ func NewCache() *Cache {
 
 func (c *Cache) Get(key string, f Func) ([]byte, error) {
 	c.Lock()
-	defer c.Unlock()
 	res, ok := c.cache[key]
+	defer c.Unlock()
 	if !ok {
 		res = &result{}
 		res.value, res.err = f()
